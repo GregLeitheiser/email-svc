@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-svc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email-svc
+  template:
+    metadata:
+      labels:
+        app: email-svc
+    spec:
+      containers:
+      - name: email-svc
+        image: servantcode/email-svc
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "200Mi"
+        env:
+        - name: ES_JAVA_OPTS 
+          value: "-Xmx128m -Xms128m"
+        - name: DB_HOST
+          value: "postgres"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-client-secrets
+              key: db_user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-client-secrets
+              key: db_password
+        - name: EMAIL_USER
+          valueFrom:
+            secretKeyRef:
+              name: email-secrets
+              key: email_user
+        - name: EMAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: email-secrets
+              key: email_password
+        - name: JWT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-key
+              key: jwt-key
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: email-svc
+spec:
+  selector:
+    app: email-svc
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
