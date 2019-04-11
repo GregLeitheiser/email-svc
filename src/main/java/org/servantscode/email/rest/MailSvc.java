@@ -21,6 +21,7 @@ public class MailSvc extends SCServiceBase {
         verifyUserAccess("email.send");
 
         configureMailer().sendMail(mail);
+        LOG.info("Email sent to: " + (mail.getTo().size() == 1? mail.getTo().get(0): mail.getTo().size() + " recipients."));
     }
 
     private Mailer configureMailer() {
@@ -32,15 +33,4 @@ public class MailSvc extends SCServiceBase {
         config.setSmtpPort(465);
         return new Mailer(config.getConfigProperties());
     }
-
-//    public static void main(String[] args) {
-//        Mail test = new Mail();
-//        test.setFrom("noreply@servantscode.org");
-//        test.setTo(asList("greg@servantscode.org", "gleitheiser@gmail.com"));
-//        test.setReplyTo("noreply@servantscode.org");
-//        test.setSubject("This is a test");
-//        test.setMessage("This is only a test. Go here <a href='http://www.servantscode.org'>now</a>");
-//
-//        new MailSvc().sendMail(test);
-//    }
 }
