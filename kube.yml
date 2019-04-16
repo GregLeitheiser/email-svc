@@ -36,16 +36,11 @@ spec:
             secretKeyRef:
               name: db-client-secrets
               key: db_password
-        - name: EMAIL_USER
+        - name: SECURE_CONFIG_KEY
           valueFrom:
             secretKeyRef:
-              name: email-secrets
-              key: email_user
-        - name: EMAIL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: email-secrets
-              key: email_password
+              name: secure-key
+              key: secure-key
         - name: JWT_KEY
           valueFrom:
             secretKeyRef:
