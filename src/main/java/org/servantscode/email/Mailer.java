@@ -5,13 +5,11 @@ import org.apache.logging.log4j.Logger;
 import org.servantscode.commons.db.ConfigDB;
 
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.*;
 import java.util.Map;
 import java.util.Properties;
 
+import static java.lang.Boolean.parseBoolean;
 import static javax.mail.Message.RecipientType.CC;
 import static javax.mail.Message.RecipientType.TO;
 import static javax.mail.internet.InternetAddress.parse;
@@ -23,15 +21,17 @@ public class Mailer {
     private static final Logger LOG = LogManager.getLogger(Mailer.class);
     private ConfigDB configDB;
 
+    private Map<String, String> mailConfig;
+
     public Mailer() {
         this.configDB = new ConfigDB();
+        mailConfig = configDB.getConfigurations("mail.smtp");
     }
 
     public void sendMail(Mail mail) {
         Authenticator auth = null;
-        Map<String, String> mailConfig = configDB.getConfigurations("mail.smtp");
 
-        if(Boolean.parseBoolean(mailConfig.get("mail.smtp.auth"))) {
+        if(parseBoolean(mailConfig.get("mail.smtp.auth"))) {
             Map<String, String> userConfig = configDB.getConfigurations("mail.user");
             String emailUser = userConfig.get("mail.user.account");
             String emailPassword = decryptConfig(userConfig.get("mail.user.password"));
@@ -64,14 +64,22 @@ public class Mailer {
     private Message generateMessage(Session session, Mail mail) throws MessagingException {
         Message message = new MimeMessage(session);
 
-        message.setFrom(new InternetAddress(mail.getFrom()));
+        String sendFrom = mailConfig.get("mail.smtp.sendFromUser");
+        if(isSet(sendFrom))
+            LOG.debug("Sending from configured address: " + sendFrom);
+        InternetAddress from = new InternetAddress(isSet(sendFrom)? sendFrom : mail.getFrom());
+
+        LOG.debug(String.format("Sending mail from: %s (Trying to include personal: %s)", from.toString(), from.getPersonal()));
+        message.setFrom(from);
         for (String email : mail.getTo())
             message.addRecipients(TO, parse(email));
         for (String email : mail.getCc())
             message.addRecipients(CC, parse(email));
 
-        if(isSet(mail.getReplyTo()))
-            message.setReplyTo(parse(mail.getReplyTo()));
+        if(isSet(mail.getReplyTo())) {
+            String replyTo = isSet(sendFrom) ?  sendFrom: mail.getReplyTo();
+            message.setReplyTo(parse(replyTo));
+        }
 
         message.setSubject(mail.getSubject());
 
