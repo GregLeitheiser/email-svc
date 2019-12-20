@@ -2,10 +2,15 @@ package org.servantscode.email;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.postgresql.util.Base64;
 import org.servantscode.commons.db.ConfigDB;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
+import java.io.*;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -88,6 +93,13 @@ public class Mailer {
 
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(mimeBodyPart);
+
+        for (Mail.Attachment a: mail.getAttachments()) {
+            MimeBodyPart attachment = new MimeBodyPart();
+            attachment.setFileName(a.getFileName());
+            attachment.setDataHandler(new DataHandler(a.getDataSource()));
+            multipart.addBodyPart(attachment);
+        }
 
         message.setContent(multipart);
         return message;
