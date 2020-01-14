@@ -94,11 +94,13 @@ public class Mailer {
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(mimeBodyPart);
 
-        for (Mail.Attachment a: mail.getAttachments()) {
-            MimeBodyPart attachment = new MimeBodyPart();
-            attachment.setFileName(a.getFileName());
-            attachment.setDataHandler(new DataHandler(a.getDataSource()));
-            multipart.addBodyPart(attachment);
+        if(mail.getAttachments() != null) {
+            for (Mail.Attachment a : mail.getAttachments()) {
+                MimeBodyPart attachment = new MimeBodyPart();
+                attachment.setFileName(a.getFileName());
+                attachment.setDataHandler(new DataHandler(a.getDataSource()));
+                multipart.addBodyPart(attachment);
+            }
         }
 
         message.setContent(multipart);
